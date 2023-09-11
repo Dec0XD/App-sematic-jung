@@ -158,3 +158,18 @@ form {
     padding: 8px;
     display: none;
 }
+
+
+.erro {
+    animation: pisca-vermelho 0.5s infinite alternate;
+  }
+
+  @keyframes pisca-vermelho {
+    from {
+      color: inherit;
+    }
+    to {
+      color: red;
+    }
+  }
+

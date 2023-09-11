@@ -31,12 +31,15 @@ def get_word(word):
 @app.route("/model2/<string:word_1>/<string:word_2>")
 def get_word_pair(word_1, word_2):
     try:
+        print('get_word_pair:', word_1, word_2)
         con = sqlite3.connect("data.db")
         cur = con.cursor()
         cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_1,))
         vec_1 = cur.fetchone()
+        print('vec1: ', vec_1)
         cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_2,))
         vec_2 = cur.fetchone()
+        print('vec2: ', vec_2)
         con.close()
         if vec_1 is None or vec_2 is None:
             return jsonify("")

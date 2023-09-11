@@ -130,34 +130,51 @@ let AssociaPalavra = (function () {
 
     async function input(event) {
         event.preventDefault();
-    
+      
         time_out = new Date();
-    
+      
         getElement("#word-error").style.display = "none";
         getElement('#word').focus();
-    
+      
         let palavra_respondida = getElement('#word').value.toLowerCase();
         if (!palavra_respondida) {
-            getElement('#word-error').innerHTML = `Digite uma palavra.`;
-            getElement("#word-error").style.display = "block";
-            time_in = new Date();
-            return false;
+          getElement('#word-error').innerHTML = `Digite uma palavra.`;
+          getElement("#word-error").style.display = "block";
+          time_in = new Date();
+          return false;
         }
-    
+      
         getElement('#word').value = "";
-        const vetores = await getModel(palavra_sonda, palavra_respondida);
+      
+        // Antes da chamada ao banco de dados
+        console.log('Antes da chamada ao banco de dados');
+        const vetores = await getModel(palavra_respondida, palavra_respondida);
+        console.log('Após a chamada ao banco de dados');
+      
+        // Exibindo o que o banco de dados retornou
+        console.log('Resultado do banco de dados:', vetores);
+      
         if (!vetores.vec_2) {
-            getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário.`;
-            getElement("#word-error").style.display = "block";
+          getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário. E nova palavra em 2 segundos`;
+          getElement("#word-error").style.display = "block";
+          getElement('#sonda').classList.add('erro');
+          time_in = new Date();
+          setTimeout(() => {
+            getElement('#sonda').classList.remove('erro');
+            palavra_sonda = getNewWord();
+            getElement('#sonda').innerHTML = palavra_sonda;
             time_in = new Date();
-            palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
-            return false;
+            getElement("#word-error").style.display = "none";
+          }, 2000);
+          return false;
         }
-    
+      
         const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
         loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
-    
-    }
+      }
+      
+      
+      
     
 
     async function loadTest(similaridade, time_out, time_in, sonda, respondida) {
