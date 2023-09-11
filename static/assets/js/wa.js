@@ -151,6 +151,9 @@ let AssociaPalavra = (function () {
         const vetores = await getModel(palavra_respondida, palavra_respondida);
         console.log('Após a chamada ao banco de dados');
       
+        // Exibindo o que o banco de dados retornou
+        console.log('Resultado do banco de dados:', vetores);
+      
         if (!vetores.vec_2) {
           getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário. E nova palavra em 2 segundos`;
           getElement("#word-error").style.display = "block";
@@ -169,6 +172,7 @@ let AssociaPalavra = (function () {
         const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
         loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
       }
+      
       
       
     
