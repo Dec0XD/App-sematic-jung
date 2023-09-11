@@ -145,7 +145,12 @@ let AssociaPalavra = (function () {
         }
       
         getElement('#word').value = "";
-        const vetores = await getModel(palavra_respondida, palavra_respondida); // Use a mesma palavra para a sonda e a palavra respondida
+      
+        // Antes da chamada ao banco de dados
+        console.log('Antes da chamada ao banco de dados');
+        const vetores = await getModel(palavra_respondida, palavra_respondida);
+        console.log('Após a chamada ao banco de dados');
+      
         if (!vetores.vec_2) {
           getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário. E nova palavra em 2 segundos`;
           getElement("#word-error").style.display = "block";
@@ -164,6 +169,7 @@ let AssociaPalavra = (function () {
         const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
         loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
       }
+      
       
     
 
