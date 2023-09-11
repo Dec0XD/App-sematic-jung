@@ -3,163 +3,57 @@
  * pesquisar melhor forma de identificar uma jogador
  * Cálculo do sorteio baseado em frequência**/
 
-// Número máximo de palavras sonda
-const num_max_de_palavras = 10;
 
-// Variáveis de controle
+
+const select_word = []
+const num_max_de_palavras = 10;
+const total_palavras = 37144;
 var num_de_palavras = 0;
 var lista_palavras_sonda = [];
 var lista_resultados = [];
 var time_in = new Date;
 
-// Array de palavras sonda selecionadas
-SelectWords_cem = [
-    "cabeça",
-    "verde",
-    "água",
-    "cantar",
-    "morte",
-    "grande",
-    "barco",
-    "pagar",
-    "janela",
-    "querida",
-    "mesa",
-    "perguntar",
-    "aldeia",
-    "frio",
-    "vara",
-    "dançar",
-    "lagoa",
-    "doente",
-    "orgulho",
-    "cozinhar",
-    "tinta",
-    "mau",
-    "agulha",
-    "nadar",
-    "viagem",
-    "azul",
-    "lanterna",
-    "pecar",
-    "pão",
-    "rico",
-    "árvore",
-    "furar",
-    "pena",
-    "amarelo",
-    "montanha",
-    "morrer",
-    "sal",
-    "novo",
-    "costume",
-    "orar",
-    "dinheiro",
-    "besta",
-    "caderno",
-    "desprezar",
-    "dedo",
-    "caro",
-    "pássaro",
-    "cair",
-    "livro",
-    "injusto",
-    "sapo",
-    "partir",
-    "fome",
-    "branco",
-    "criança",
-    "atenção",
-    "caneta",
-    "triste",
-    "uva",
-    "casar",
-    "casa",
-    "amor",
-    "copo",
-    "brigar",
-    "couro",
-    "comprido",
-    "batata",
-    "pintar",
-    "parte",
-    "velho",
-    "flor",
-    "bater",
-    "caixa",
-    "animal",
-    "família",
-    "lavar",
-    "vaca",
-    "estranho",
-    "felicidade",
-    "mentir",
-    "educação",
-    "apertado",
-    "irmão",
-    "medo",
-    "cegonha",
-    "falso",
-    "temer",
-    "beijar",
-    "noiva",
-    "puro",
-    "porta",
-    "escolher",
-    "grama",
-    "satisfeito",
-    "pirraça",
-    "dormir",
-    "mês",
-    "chique",
-    "mulher",
-    "bronca"
-]
+// reading json and geting words length
+// selectWord = 
+/// return 
 
-// Função para obter elementos do DOM
 function getElement(q) {
     return document.querySelector(q);
 }
 
-// Função para calcular a magnitude de um vetor
 function mag(a) {
     return Math.sqrt(a.reduce(function (sum, val) {
         return sum + val * val;
     }, 0));
 }
 
-// Função para calcular o produto escalar entre dois vetores
 function dot(f1, f2) {
     return f1.reduce(function (sum, a, idx) {
         return sum + a * f2[idx];
     }, 0);
 }
 
-// Função para calcular a similaridade de cosseno entre dois vetores
 function getCosSim(f1, f2) {
     return dot(f1, f2) / (mag(f1) * mag(f2));
 }
 
-// Função para obter uma nova palavra sonda
 function getNewWord() {
-    const num = Math.floor(Math.random() * SelectWords_cem.length);
-    const nova_palavra_sonda = SelectWords_cem[num];
-    lista_palavras_sonda.push(nova_palavra_sonda);
+    const num = Math.floor(Math.random() * (total_palavras - 1)) + 1;
+    const nova_palavra = SelectWords[num];
+    lista_palavras_sonda.push(nova_palavra);
     num_de_palavras += 1;
-    getElement('#sonda').innerHTML = nova_palavra_sonda;
+    getElement('#sonda').innerHTML = nova_palavra;
     time_in = new Date();
     console.log(num_de_palavras);
-    console.log(nova_palavra_sonda);
-    return nova_palavra_sonda;
+    console.log(nova_palavra);
+    return nova_palavra;
 }
 
-// Função para obter a data atual
 function getDate() {
     const now = new Date().toLocaleDateString();
     return now;
 }
 
-// Função para exibir instruções
 function instructions() {
     var modal = getElement("#modal");
     var span = getElement(".close");
@@ -175,10 +69,9 @@ function instructions() {
         AssociaPalavra.init();
     });
 }
-
-// Classe para interação com o backend remoto
 class RemoteBackend {
     async getModel(probeWord, word) {
+        console.log('Running get model2', probeWord, word);
         const url = "/model2/" + probeWord + "/" + word;
         const response = await fetch(url);
         try {
@@ -206,7 +99,6 @@ class RemoteBackend {
     }
 };
 
-// Classe para armazenar resultados
 class Resultado {
     constructor(id, data, tempo, palavra_sonda, palavra_respondida, similaridade) {
         this.id = id;
@@ -218,11 +110,10 @@ class Resultado {
     }
 }
 
-// Módulo AssociaPalavra
 let AssociaPalavra = (function () {
     let getModel, saveTest, backend, resultado;
-    let palavra_sonda = ''; // Armazena a palavra sonda atual
-    let time_out = 0; // Armazena o tempo de saída para cálculos
+    let palavra_sonda = '';
+    let time_out = 0;
 
     async function init() {
         if (backend == undefined) {
@@ -231,78 +122,79 @@ let AssociaPalavra = (function () {
         getModel = backend.getModel.bind(backend);
         saveTest = backend.saveTest.bind(backend);
 
-        palavra_sonda = getNewWord(); // Inicializa a palavra sonda
+        palavra_sonda = getNewWord();
 
         getElement('#jump-btn').addEventListener('click', jump);
 
-        // Recebe a palavra do usuário
+        //recebe palavra do usuário
         getElement('#form').addEventListener('submit', input);
     }
 
     async function jump(event) {
         event.preventDefault();
         time_out = new Date();
-        loadTest(0, time_out, time_in, palavra_sonda, 'NaN'); // Inicia o carregamento dos testes
+        loadTest(0, time_out, time_in, palavra_sonda, 'NaN');
     }
 
     async function input(event) {
         event.preventDefault();
-
+    
         time_out = new Date();
-
+    
         getElement("#word-error").style.display = "none";
         getElement('#word').focus();
-
+    
         let palavra_respondida = getElement('#word').value.toLowerCase();
+        console.log('palavra_respondida: ', palavra_respondida);
         if (!palavra_respondida) {
             getElement('#word-error').innerHTML = `Digite uma palavra.`;
             getElement("#word-error").style.display = "block";
             time_in = new Date();
             return false;
         }
-
+    
         getElement('#word').value = "";
         const vetores = await getModel(palavra_sonda, palavra_respondida);
 
-        // Verifica se a palavra inserida pelo usuário não existe no vocabulário
+        console.log('vetores: ', vetores);
         if (!vetores.vec_2) {
-          getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário. Nova palavra em 2 segundos`;
-          getElement("#word-error").style.display = "block";
-          getElement('#sonda').classList.add('erro'); // Adiciona a classe 'erro' à palavra sonda
-          time_in = new Date();
-          setTimeout(() => {
-            getElement('#sonda').classList.remove('erro'); // Remove a classe 'erro' após 2 segundos
-            palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
-            getElement('#sonda').innerHTML = palavra_sonda;
+            getElement('#word-error').innerHTML = `A palavra ${palavra_respondida} não consta no vocabulário.`;
+            getElement("#word-error").style.display = "block";
             time_in = new Date();
-            getElement("#word-error").style.display = "none"; // Remove a mensagem de erro
-          }, 2000); // 2 segundos de atraso
-          return false;
+            palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
+            return false;
         }
-
+    
         const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
-        loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida); // Carrega o resultado do teste
-
+        loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
+    
     }
+    
 
     async function loadTest(similaridade, time_out, time_in, sonda, respondida) {
         const id = 0;
         const tempo_de_resposta = time_out.getTime() - time_in.getTime();
-        let resultado = new Resultado(id, getDate(), tempo_de_resposta, sonda,
-            respondida, similaridade);
+        let resultado = new Resultado(id, getDate(), tempo_de_resposta, sonda, respondida, similaridade);
         lista_resultados.push(resultado);
         console.log(resultado);
         const saveStatus = await saveTest(JSON.stringify(resultado));
         if (saveStatus == 500) {
             return false;
         }
-        if (num_de_palavras == num_max_de_palavras) {
-            endTest(); // Encerra o teste quando atingir o limite
+        if (respondida !== 'NaN') {
+            num_de_palavras += 1; }
+        if (num_de_palavras === num_max_de_palavras) {
+            endTest();
             return false;
         }
-        palavra_sonda = getNewWord(); // Atualiza a palavra sonda
+       
+        palavra_sonda = getNewWord();
+        getElement('#sonda').innerHTML = palavra_sonda;
+        time_in = new Date();
         return true;
     }
+    
+    
 
     function endTest() {
         console.log('end')
@@ -341,8 +233,6 @@ let AssociaPalavra = (function () {
 
 })();
 
-
-// Evento de carregamento da página
 window.addEventListener('load', async () => {
 
     instructions();

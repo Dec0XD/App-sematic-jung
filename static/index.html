@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/assets/styles.css">
+    <script src="assets/js/SelectWords.js?2"></script>
     <script src="assets/js/wa.js"></script>
+    <link rel="stylesheet" href="assets/styles.css">
     <title>AssociaPalavra</title>
 </head>
 
@@ -15,9 +16,9 @@
         <!-- Modal content -->
         <div class="modal-content">
             <span class="close">&times;</span>
-            <p>Este é um Teste de Associação de Palavras.</p>
+            <p>Este é um teste de associação de palavras.</p>
             Serão apresentadas palavras na tela que chamaremos de 'Palavras Sonda'.
-            A cada 'Palavra Sonda' apresentada, você deve ler e então escrever na caixa de texto a
+            A cada 'Palavra Sonda' apresentada. Você deve ler e então escrever na caixa de texto a
             primeira palavra que lhe vier à mente e clicar no botão 'Enviar'
             ou apertar 'Enter'.</p>
             <p>Caso deseje, você pode pular palavras apertando o botão 'Pular',
@@ -40,156 +41,6 @@
             </div>
         </form>
     </div>
-
 </body>
 
-<script>
-    // Your JavaScript code
-    // Replace the DOM manipulation with appropriate Flask routes (AJAX requests)
-    // For example, replace getElement calls with AJAX requests to the server.
-    document.getElementById('form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        var word = document.getElementById('word').value.toLowerCase();
-        // Perform AJAX request to /model2/probeWord/word
-        fetch('/model2/' + '{{ palavra_sonda }}' + '/' + word)
-        .then(response => response.json())
-        .then(data => {
-            // Handle the data received from the server
-            // For example, update the page with the similarity value or show an error message
-            // After processing the response, fetch a new word from the server
-            fetch('/get_new_word')
-            .then(response => response.text())
-            .then(newWord => {
-                document.getElementById('sonda').innerHTML = newWord;
-            });
-        });
-    });
-
-    document.getElementById('jump-btn').addEventListener('click', function(event) {
-        event.preventDefault();
-        // Perform AJAX request to save the test with 'NaN' as the responded word
-        fetch('/save_test/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: 0,
-                data: '{{ date }}',
-                tempo: Date.now() - '{{ time_in }}',
-                palavra_sonda: '{{ palavra_sonda }}',
-                palavra_respondida: 'NaN',
-                similaridade: 0
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response from the server, if needed
-            // After processing the response, fetch a new word from the server
-            fetch('/get_new_word')
-            .then(response => response.text())
-            .then(newWord => {
-                document.getElementById('sonda').innerHTML = newWord;
-            });
-        });
-    });
-
-    async function input(event) {
-    event.preventDefault();
-
-    time_out = new Date();
-
-    getElement("#word-error").style.display = "none";
-    getElement('#word').focus();
-
-    let palavra_respondida = getElement('#word').value.toLowerCase();
-    if (!palavra_respondida) {
-        getElement('#word-error').innerHTML = `Digite uma palavra.`;
-        getElement("#word-error").style.display = "block";
-        time_in = new Date();
-        return false;
-    }
-
-    getElement('#word').value = "";
-    
-    // Send the user input to the server for processing
-    try {
-        const response = await fetch('/input', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                palavra_respondida: palavra_respondida
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            // If success, update the page or perform any other actions
-            // For example, you might want to show the similarity value or provide feedback to the user
-        } else {
-            // If error, show the error message returned from the server
-            getElement('#word-error').innerHTML = data.error;
-            getElement("#word-error").style.display = "block";
-            getElement('#sonda').classList.add('erro');
-            setTimeout(() => {
-                getElement('#sonda').classList.remove('erro');
-                getNewWord(); // Fetch a new word without changing the displayed word
-                getElement("#word-error").style.display = "none";
-            }, 2000); // 2 seconds delay
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        // Handle any other errors that may occur during the fetch
-    }
-}
-
-function instructions() {
-    var modal = getElement("#modal");
-    var span = getElement(".close");
-
-    modal.style.display = "block";
-
-    span.onclick = function () {
-        modal.style.display = "none";
-    }
-
-    getElement('#init-btn').addEventListener('click', () => {
-        modal.style.display = "none";
-        AssociaPalavra.init();
-    });
-}
-
-async function input(event) {
-    event.preventDefault();
-
-    time_out = new Date();
-
-    getElement("#word-error").style.display = "none";
-    getElement('#word').focus();
-
-    let palavra_respondida = getElement('#word').value.toLowerCase();
-    if (!palavra_respondida) {
-        getElement('#word-error').innerHTML = `Digite uma palavra.`;
-        getElement("#word-error").style.display = "block";
-        time_in = new Date();
-        return false;
-    }
-
-    getElement('#word').value = "";
-    const vetores = await getModel(palavra_sonda, palavra_respondida);
-    if (!vetores.vec_2) {
-        getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário.`;
-        getElement("#word-error").style.display = "block";
-        time_in = new Date();
-        palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
-        return false;
-    }
-
-    const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
-    loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
-
-}
-
-</script>
 </html>
