@@ -4,17 +4,14 @@ import pickle
 
 app = Flask(__name__)
 
-# Rota para a página inicial
 @app.route("/")
 def home():
     return send_file("static/index.html")
 
-# Rota para servir arquivos estáticos (imagens, CSS, etc.)
 @app.route("/assets/<path:path>")
 def send_static(path):
     return send_from_directory("static/assets", path)
 
-# Rota para obter o vetor de uma palavra individual
 @app.route("/model/<string:word>")
 def get_word(word):
     try:
@@ -31,16 +28,18 @@ def get_word(word):
         print(e)
         return jsonify("Erro")
 
-# Rota para obter os vetores de duas palavras para cálculo de similaridade
 @app.route("/model2/<string:word_1>/<string:word_2>")
 def get_word_pair(word_1, word_2):
     try:
+        print('get_word_pair:', word_1, word_2)
         con = sqlite3.connect("data.db")
         cur = con.cursor()
         cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_1,))
         vec_1 = cur.fetchone()
+        print('vec1: ', vec_1)
         cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_2,))
         vec_2 = cur.fetchone()
+        print('vec2: ', vec_2)
         con.close()
         if vec_1 is None or vec_2 is None:
             return jsonify("")
@@ -53,7 +52,6 @@ def get_word_pair(word_1, word_2):
         print(e)
         return jsonify("")
 
-# Rota para salvar os resultados do teste no banco de dados
 @app.route("/save_test/", methods=["POST"])
 def save_test():
     try:
@@ -78,22 +76,18 @@ def save_test():
 
     return jsonify(msg)
 
-# Tratador de erro para página não encontrada (404)
 @app.errorhandler(404)
 def not_found(error):
     return "Page not found", 404
 
-# Tratador de erro para erros internos do servidor (500)
 @app.errorhandler(500)
 def error_handler(error):
     return str(error), 500
 
-# Adiciona cabeçalho para desativar cache após cada requisição
 @app.after_request
 def add_header(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
-# Inicia o servidor Flask
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000, debug=True)
+    app.run(debug=True)
