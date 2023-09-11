@@ -3,19 +3,12 @@
  * pesquisar melhor forma de identificar uma jogador
  * Cálculo do sorteio baseado em frequência**/
 
-
-
-const select_word = []
 const num_max_de_palavras = 10;
-const total_palavras = 37144;
+const total_palavras = 100;
 var num_de_palavras = 0;
 var lista_palavras_sonda = [];
 var lista_resultados = [];
 var time_in = new Date;
-
-// reading json and geting words length
-// selectWord = 
-/// return 
 
 function getElement(q) {
     return document.querySelector(q);
@@ -71,7 +64,6 @@ function instructions() {
 }
 class RemoteBackend {
     async getModel(probeWord, word) {
-        console.log('Running get model2', probeWord, word);
         const url = "/model2/" + probeWord + "/" + word;
         const response = await fetch(url);
         try {
@@ -145,7 +137,6 @@ let AssociaPalavra = (function () {
         getElement('#word').focus();
     
         let palavra_respondida = getElement('#word').value.toLowerCase();
-        console.log('palavra_respondida: ', palavra_respondida);
         if (!palavra_respondida) {
             getElement('#word-error').innerHTML = `Digite uma palavra.`;
             getElement("#word-error").style.display = "block";
@@ -155,22 +146,13 @@ let AssociaPalavra = (function () {
     
         getElement('#word').value = "";
         const vetores = await getModel(palavra_sonda, palavra_respondida);
-
-        console.log('vetores: ', vetores);
         if (!vetores.vec_2) {
-            getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário. E nova palavra em 2 segundos`;
+            getElement('#word-error').innerHTML = `A palavra: ${palavra_respondida} não consta no vocabulário.`;
             getElement("#word-error").style.display = "block";
-            getElement('#sonda').classList.add('erro'); // Adiciona a classe 'erro' à palavra sonda
             time_in = new Date();
-            setTimeout(() => {
-              getElement('#sonda').classList.remove('erro'); // Remove a classe 'erro' após 2 segundos
-              palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
-              getElement('#sonda').innerHTML = palavra_sonda;
-              time_in = new Date();
-              getElement("#word-error").style.display = "none"; // Remove a mensagem de erro
-            }, 2000); // 2 segundos de atraso
+            palavra_sonda = getNewWord(); // Pular para a próxima palavra sonda
             return false;
-          }
+        }
     
         const similaridade = getCosSim(vetores.vec_1, vetores.vec_2);
         loadTest(similaridade, time_out, time_in, palavra_sonda, palavra_respondida);
