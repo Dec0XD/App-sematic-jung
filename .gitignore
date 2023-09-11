@@ -2,4 +2,3 @@ glove_s100.txt
 word2vec.db
 .venv
 _pycache_
-*.db
