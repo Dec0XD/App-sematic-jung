@@ -1,8 +1,18 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory
-import sqlite3
+import pandas as pd
 import pickle
 
 app = Flask(__name__)
+
+# Lê o arquivo CSV de palavras com vírgula como separador
+with open("words.csv", "r") as file:
+    words_list = file.readline().strip().split(',')
+
+# Criando um dicionário onde as palavras são as chaves e as posições são os valores
+words_dict = {word: position for position, word in enumerate(words_list)}
+
+# Lê o arquivo CSV de vetores
+vectors_df = pd.read_csv("vetores.csv")
 
 @app.route("/")
 def home():
@@ -15,15 +25,21 @@ def send_static(path):
 @app.route("/model/<string:word>")
 def get_word(word):
     try:
-        con = sqlite3.connect("data.db")
-        cur = con.cursor()
-        cur.execute("SELECT vector FROM embedding WHERE word = ?", (word,))
-        res = cur.fetchone()
-        con.close()
-        if res is None:
+        # Verificando se a palavra está no DataFrame
+        row = words_df.loc[words_df['word'] == word]
+        
+        if not row.empty:
+            # Se a palavra for encontrada, ele retorna a posição e o vetor correspondente
+            position = row.iloc[0]['position']
+            vector = row.iloc[0]['vector']
+
+            # Criando uma lista do vetor
+            vector = pickle.loads(vector)
+            
+            return jsonify(list(vector))
+        else:
+            # A palavra não foi encontrada
             return ""
-        res = pickle.loads(res[0])
-        return jsonify(list(res))
     except Exception as e:
         print(e)
         return jsonify("Erro")
@@ -31,26 +47,30 @@ def get_word(word):
 @app.route("/model2/<string:word_1>/<string:word_2>")
 def get_word_pair(word_1, word_2):
     try:
-        print('get_word_pair:', word_1, word_2)
-        con = sqlite3.connect("data.db")
-        cur = con.cursor()
-        cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_1,))
-        vec_1 = cur.fetchone()
-        print('vec1: ', vec_1)
-        cur.execute("SELECT vector FROM embedding WHERE word = ?", (word_2,))
-        vec_2 = cur.fetchone()
-        print('vec2: ', vec_2)
-        con.close()
-        if vec_1 is None or vec_2 is None:
+        # Obtém a posição das palavras no arquivo words.csv
+        position_1 = words_dict.get(word_1)
+        position_2 = words_dict.get(word_2)
+        
+        if position_1 is None or position_2 is None:
             return jsonify("")
+        
+        # Obtém os vetores correspondentes as palavras sonda e input 
+        vector_1 = vectors_df.iloc[position_1]['vector']
+        vector_2 = vectors_df.iloc[position_2]['vector']
+        
+        if pd.isna(vector_1) or pd.isna(vector_2):
+            return jsonify("")
+        
         result = {
-            "vec_1": list(pickle.loads(vec_1[0])),
-            "vec_2": list(pickle.loads(vec_2[0])),
+            "vec_1": list(pickle.loads(vector_1)),
+            "vec_2": list(pickle.loads(vector_2)),
         }
         return jsonify(result)
     except Exception as e:
         print(e)
         return jsonify("")
+
+
 
 @app.route("/save_test/", methods=["POST"])
 def save_test():
@@ -62,14 +82,6 @@ def save_test():
         palavra_sonda = json_data["palavra_sonda"]
         palavra_respondida = json_data["palavra_respondida"]
         similaridade = json_data["similaridade"]
-
-        with sqlite3.connect("data.db") as con:
-            cur = con.cursor()
-            cur.execute(
-                """INSERT INTO game values (?,?,?,?,?,?)""",
-                (id, data, tempo, palavra_sonda, palavra_respondida, similaridade),
-            )
-            con.commit()
         msg = "200"
     except:
         msg = "500"
